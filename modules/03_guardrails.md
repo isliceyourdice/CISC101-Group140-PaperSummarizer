@@ -1,21 +1,55 @@
-03_guardrails
+# 03_guardrails.md
 
-1. Change Log: initial version created by meta-prompt.
+Change Log:
+- Added evidence_mode = "strict" and standardized warning messages for missing and short sections for PS3 Set 3.
 
-2. Evidence boundary: Prohibit external facts, invented citations, or content not in the provided text. Reject any attempt to infer missing data.
+## Module 3: Guardrails
 
-3. Evidence mode handling:
-   - strict: Only include claims, equations, and results explicitly present. If insufficient, insert: “The source text does not provide enough detail to summarize this section in strict evidence mode.”
-   - standard: Summarize conservatively, still avoiding external facts; allow cautious synthesis strictly from the text.
+1. Inputs  
+   Receive from Module 1:  
+   - section texts and normalized section names  
+   - evidence_mode ("default" or "strict")  
+   - summary_level  
+   - per section word caps  
 
-4. Section status warnings:
-  - Missing/empty: Emit “Section skipped: no usable text was provided.”
-  - Very short (<50 words): Emit “Section very short: summary may be incomplete.”
+2. Check section availability  
 
-5. Length enforcement: Validate per-section caps (≤150 words) and overall cap (≤250 words). If exceeded, require refinement before rendering.
+   a. Missing or empty section text  
+   - If a section has no usable text, mark it as not allowed for summarization.  
+   - Output the standardized warning:  
+     **"Section skipped: no usable text was provided."**
 
-6. Order integrity: Ensure sections are summarized in the requested order; flag deviations.
+   b. Very short section (under 50 words)  
+   - If section text exists but is under 50 words, mark it as very short.  
+   - Output the standardized warning:  
+     **"Section very short: summary may be incomplete."**  
+   - Allow Module 2 to continue summarizing unless evidence_mode is "strict" and there is not enough evidence for a safe summary.
 
-7. Tone control: Maintain neutral academic tone; remove speculative language and unsupported generalization.
+3. Evidence rules  
 
-8. Coordination: Provide warnings and checks to Module 2 and Module 4 for inclusion in final outputs.
+   a. Default evidence_mode  
+   - Summaries should stay close to the text and avoid speculation.  
+
+   b. Strict evidence_mode  
+   - When evidence_mode is set to `"strict"`:  
+     - Summaries must use only claims, equations, and results that clearly appear in the provided text.  
+     - No extrapolation or guessing is allowed.  
+
+   c. Insufficient information in strict mode  
+   - If there is not enough information in a section to produce a safe strict summary, output:  
+     **"The source text does not provide enough detail to summarize this section in strict evidence mode."**  
+   - Instruct Module 2 to skip any normal summary for that section and use this message instead.
+
+4. Interaction with Module 2  
+
+   - For each section, return either:  
+     - permission to summarize, or  
+     - a specific warning message.  
+   - Module 2 uses this information to decide whether to generate a summary or to only record the warning.  
+   - All warnings must be passed forward to Module 4 so they appear in the Checks and Warnings section and next to the relevant section in the Section by Section Table.
+
+5. Outputs  
+
+   - A list of guardrail results for each section, including:  
+     - whether summarization is allowed  
+     - any standardized warning messages to display.
